@@ -1,0 +1,1 @@
+/usr/bin/ld: ./lib/libvk.so: undefined reference to `xdg_wm_base_interface' : CC=g++ -> CC=gcc
