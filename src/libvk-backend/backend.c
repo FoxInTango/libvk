@@ -10,6 +10,8 @@
 
 #include <cglm/cglm.h>
 
+#include "backend.h"
+
 #include "kms/drm-node.h"
 #include "kms/buffer.h"
 #include "kms/dma-buf.h"
@@ -262,8 +264,7 @@ render (volatile bool *running, uint8_t *imageIndex, int *fbid, void *data)
 int
 main (void)
 */
-int
-backend_kms_boot(void)
+int __attribute__((visibility("default"))) backend_kms_boot(void)
 {
 	VkExtent2D extent2D;
 	VkSurfaceFormatKHR surfaceFormat;

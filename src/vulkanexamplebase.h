@@ -5,7 +5,8 @@
 *
 * This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
 */
-
+#ifndef _VULKAN_EXAMPLE_BASE_H_
+#define _VULKAN_EXAMPLE_BASE_H_
 #pragma once
 #include <libcpp/libcpp.h>
 #ifdef _WIN32
@@ -24,7 +25,7 @@
 #include <directfb.h>
 #elif defined(VK_USE_PLATFORM_WAYLAND_KHR)
 #include <wayland-client.h>
-#include "xdg-shell-client-protocol.h"
+#include "protocols/xdg-shell-client-protocol.h"
 #elif defined(VK_USE_PLATFORM_KMS)
 
 #elif defined(_DIRECT2DISPLAY)
@@ -419,3 +420,4 @@ public:
 };
 
 EXTERN_C_END
+#endif

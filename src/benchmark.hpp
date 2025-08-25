@@ -5,6 +5,8 @@
 *
 * This code is licensed under the MIT license (MIT) (http://opensource.org/licenses/MIT)
 */
+#ifndef _LIBVK_BENCHMARK_H_
+#define _LIBVK_BENCHMARK_H_
 
 #include <vector>
 #include <string>
@@ -102,3 +104,5 @@ namespace vks
 		}
 	};
 }
+
+#endif

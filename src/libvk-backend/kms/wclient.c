@@ -9,10 +9,10 @@
 #include <dev/evdev/input-event-codes.h>
 #endif
 
-#include "fullscreen-shell-unstable-v1-client-protocol.h"
+#include "../../protocols/fullscreen-shell-unstable-v1-client-protocol.h"
 
 /* https://wayland.app/protocols/xdg-shell */
-#include "../../xdg-shell-client-protocol.h"
+#include "../../protocols/xdg-shell-client-protocol.h"
 #include "wclient.h"
 
 /*****************************

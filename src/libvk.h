@@ -12,4 +12,3 @@
 #include "VulkanTexture.h"
 #include "VulkanTools.h"
 #include "VulkanUIOverlay.h"
-#include "xdg-shell-client-protocol.h"

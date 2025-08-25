@@ -7,3 +7,6 @@ Almost all codes here are from:
 
 And that :
 
+# Presenting Directly to Display Devices
+https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html#wsi
+mesa-25.1.4\src\vulkan\wsi
