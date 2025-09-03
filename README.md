@@ -11,3 +11,6 @@ And that :
 # Presenting Directly to Display Devices
 https://registry.khronos.org/vulkan/specs/latest/html/vkspec.html#wsi
 mesa-25.1.4\src\vulkan\wsi
+
+
+[About : slang](https://shader-slang.org/docs/first-slang-shader.html https://www.khronos.org/assets/uploads/developers/presentations/Vulkan_BOF_Using_Slang_with_Vulkan_SIGG24.pdf)

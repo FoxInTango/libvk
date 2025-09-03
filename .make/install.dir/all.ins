@@ -5,7 +5,7 @@ install.header:
 ifneq ($(wildcard $(HEADER_INSTALL_PATH)),)
 	-rm -rf $(HEADER_INSTALL_PATH)/$(TARGET_NAME)
 	-mkdir  $(HEADER_INSTALL_PATH)/$(TARGET_NAME)
-	-cd src && cp *.h  $(HEADER_INSTALL_PATH)/$(TARGET_NAME)
+	-cd src && cp *.h *.hpp  $(HEADER_INSTALL_PATH)/$(TARGET_NAME)
 endif
 install.bin:
 ifneq ($(wildcard $(BINARY_INSTALL_PATH)),)

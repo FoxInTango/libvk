@@ -24,8 +24,7 @@ extern CAMetalLayer* layer;
 std::vector<const char*> VulkanExampleBase::args;
 
 VkResult VulkanExampleBase::createInstance()
-{
-    
+{   
 	std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 
 	// Enable surface extensions depending on os
@@ -53,7 +52,10 @@ VkResult VulkanExampleBase::createInstance()
 	instanceExtensions.push_back(VK_QNX_SCREEN_SURFACE_EXTENSION_NAME);
 #endif
 
-    std::cout << "try : vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);" << std::endl;
+    for(std::vector<const char*>::iterator iter = instanceExtensions.begin();iter != instanceExtensions.end();iter ++){
+		std::cout << "instanceExtensions[" << iter - instanceExtensions.begin() <<"]" << *iter << std::endl;
+	}
+    //std::cout << "try : vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);" << std::endl;
 	// Get extensions supported by the instance and store for later use
 	uint32_t extCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);
@@ -69,7 +71,7 @@ VkResult VulkanExampleBase::createInstance()
 		}
 	}
 
-    std::cout << "end: vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);" << std::endl;
+    //std::cout << "end: vkEnumerateInstanceExtensionProperties(nullptr, &extCount, nullptr);" << std::endl;
 
 #if (defined(VK_USE_PLATFORM_IOS_MVK) || defined(VK_USE_PLATFORM_MACOS_MVK) || defined(VK_USE_PLATFORM_METAL_EXT))
 	// SRS - When running on iOS/macOS with MoltenVK, enable VK_KHR_get_physical_device_properties2 if not already enabled by the example (required by VK_KHR_portability_subset)
@@ -153,9 +155,9 @@ VkResult VulkanExampleBase::createInstance()
 		}
 	}
 
-    std::cout << "try: VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);" << std::endl;
+    //std::cout << "try: VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);" << std::endl;
 	VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);
-    std::cout << "end: VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);" << std::endl;
+    //std::cout << "end: VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &instance);" << std::endl;
 	// If the debug utils extension is present we set up debug functions, so samples can label objects for debugging
 	if (std::find(supportedInstanceExtensions.begin(), supportedInstanceExtensions.end(), VK_EXT_DEBUG_UTILS_EXTENSION_NAME) != supportedInstanceExtensions.end()) {
 		vks::debugutils::setup(instance);
