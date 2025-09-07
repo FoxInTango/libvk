@@ -1,2 +1,4 @@
+SUPER_MAKE_DIR=/home/lidali/alpine/libraries/libui/
+SUPER_MAKE_CONFIG_DIR=/home/lidali/alpine/libraries/libui/.make
 SUPER_MAKE_DIR=/home/lidali/alpine/
 SUPER_MAKE_CONFIG_DIR=/home/lidali/alpine/.make
