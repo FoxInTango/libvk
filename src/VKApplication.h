@@ -9,3 +9,17 @@
  * 8,vkCreateSemaphore 
  * getEnabledFeatures getEnabledExtensions[to be implemented]
  */
+#ifndef _LIBVK_APPLICATION_H_
+#define _LIBVK_APPLICATION_H_
+#include "VKContext.h"
+#include <libcpp/libcpp.h>
+EXTERN_C_BEGIN
+namespaceBegin(foxintango)
+class foxintangoAPI VKApplication:public VKContext{
+public:
+    VKApplication();
+    virtual ~VKApplication();
+};
+namespaceEnd
+EXTERN_C_END
+#endif
