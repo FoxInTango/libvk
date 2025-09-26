@@ -12,11 +12,10 @@ CONFIG_FLAGS_AR = -O3
 CONFIG_FLAGS_LD = -O3
 
 # libs to be linked with.
-CONFIG_LINK_WITH_LIBS      += -lstdc++
-CONFIG_HEADER_SEARCH_DIRS  += -I /usr/include -I /usr/local/include -I./external/ktx/include
-CONFIG_LIBRARY_SEARCH_DIRS += -L /usr/lib -L /usr/local/lib
+CONFIG_LINK_WITH_LIBS      += -lvulkan -lstdc++
+CONFIG_HEADER_SEARCH_DIRS  +=
+CONFIG_LIBRARY_SEARCH_DIRS +=
 CONFIG_SOURCE_ROOT_DIRS    += ./src
-CONFIG_SOURCE_ROOT_DIRS    += ./external/ktx/lib
 
 
 # For example

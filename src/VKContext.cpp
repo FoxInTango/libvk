@@ -4,10 +4,66 @@ using namespace foxintango;
 #include <string>
 #include <vector>
 #include <string.h>
+#include <unistd.h>
+std::vector<const char*> supportedDeviceExtensions;
+std::vector<const char*> supportedInstanceExtensions;
+std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 
-
-std::vector<std::string> supportedInstanceExtensions;
-std::vector<std::string> neededInstanceExtensions;
+// Physical device (GPU) that Vulkan will use
+//VkPhysicalDevice physicalDevice{ VK_NULL_HANDLE };
+// Stores physical device properties (for e.g. checking device limits)
+VkPhysicalDeviceProperties deviceProperties{};
+// Stores the features available on the selected physical device (for e.g. checking if a feature is available)
+VkPhysicalDeviceFeatures deviceFeatures{};
+// Stores all available memory (type) properties for the physical device
+VkPhysicalDeviceMemoryProperties deviceMemoryProperties{};
+/** @brief Set of physical device features to be enabled for this example (must be set in the derived constructor) */
+VkPhysicalDeviceFeatures enabledFeatures{};
+/** @brief Set of device extensions to be enabled for this example (must be set in the derived constructor) */
+std::vector<const char*> enabledDeviceExtensions;
+/** @brief Set of instance extensions to be enabled for this example (must be set in the derived constructor) */
+std::vector<const char*> enabledInstanceExtensions;
+/** @brief Set of layer settings to be enabled for this example (must be set in the derived constructor) */
+//std::vector<VkLayerSettingEXT> enabledLayerSettings;
+/** @brief Optional pNext structure for passing extension structures to device creation */
+void* deviceCreatepNextChain = nullptr;
+/** @brief Logical device, application's view of the physical device (GPU) */
+//VkDevice device{ VK_NULL_HANDLE };
+// Handle to the device graphics queue that command buffers are submitted to
+VkQueue queue{ VK_NULL_HANDLE };
+// Depth buffer format (selected during Vulkan initialization)
+VkFormat depthFormat{VK_FORMAT_UNDEFINED};
+// Command buffer pool
+//VkCommandPool cmdPool{ VK_NULL_HANDLE };
+/** @brief Pipeline stages used to wait at for graphics queue submissions */
+VkPipelineStageFlags submitPipelineStages = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+// Contains command buffers and semaphores to be presented to the queue
+VkSubmitInfo submitInfo{};
+// Command buffers used for rendering
+//std::vector<VkCommandBuffer> drawCmdBuffers;
+// Global render pass for frame buffer writes
+//VkRenderPass renderPass{ VK_NULL_HANDLE };
+// List of available frame buffers (same as number of swap chain images)
+//std::vector<VkFramebuffer>frameBuffers;
+// Active frame buffer index
+//uint32_t currentBuffer = 0;
+// Descriptor set pool
+//VkDescriptorPool descriptorPool{ VK_NULL_HANDLE };
+// List of shader modules created (stored for cleanup)
+//std::vector<VkShaderModule> shaderModules;
+// Pipeline cache object
+//VkPipelineCache pipelineCache{ VK_NULL_HANDLE };
+// Wraps the swap chain to present images (framebuffers) to the windowing system
+// VulkanSwapChain swapChain;
+// Synchronization semaphores
+struct {
+    // Swap chain image presentation
+    VkSemaphore presentComplete;
+    // Command buffer submission and execution
+    VkSemaphore renderComplete;
+} semaphores{};
+std::vector<VkFence> waitFences;
+bool requiresStencil{ false };
 
 /** What are missed here than the vulkan example base 
  *  1,Debug
@@ -15,9 +71,9 @@ std::vector<std::string> neededInstanceExtensions;
  * */
 VKContext::VKContext(){
     #ifdef PLATFORM_LINUX
-    neededInstanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
-    neededInstanceExtensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
-    //neededInstanceExtensions.push_back(VK_EXT_DIRECTFB_SURFACE_EXTENSION_NAME);
+    instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
+    instanceExtensions.push_back(VK_KHR_WAYLAND_SURFACE_EXTENSION_NAME);
+    //instanceExtensions.push_back(VK_EXT_DIRECTFB_SURFACE_EXTENSION_NAME);
     #endif
 
     // Get extensions supported by the instance and store for later use
@@ -44,6 +100,11 @@ VKContext::VKContext(){
     VkInstanceCreateInfo instanceCreateInfo{};
     instanceCreateInfo.sType            = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     instanceCreateInfo.pApplicationInfo = &appInfo;
+
+    if (!instanceExtensions.empty()) {
+        instanceCreateInfo.enabledExtensionCount = (uint32_t)instanceExtensions.size();
+        instanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
+    }
     const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
     // Check if this layer is available at instance level
     uint32_t instanceLayerCount;
@@ -106,7 +167,75 @@ VKContext::VKContext(){
     // Select physical device to be used for the Vulkan example
     // Defaults to the first device unless specified by command line
     uint32_t selectedDevice = 0;
+    // TODO
+    // Enable Features 
+    // Enable Extensions
+    
+    VkPhysicalDevice physicalDevice = physicalDevices[selectedDevice];
+    device.bind(physicalDevice);
+    result = device.createLogicalDevice(enabledFeatures,enabledDeviceExtensions,deviceCreatepNextChain,false);
+    if(result != VK_SUCCESS){
+        vks::tools::exitFatal("Could not create Vulkan device: \n" + vks::tools::errorString(result), result);
+        return;// false;
+    }
+    //device.logicalDevice;
+
+    // Get a graphics queue from the device
+    //vkGetDeviceQueue(device.logicalDevice,device.queueFamilyIndices.graphics, 0, &queue);
+
+    // Find a suitable depth and/or stencil format
+    VkBool32 validFormat{ false };
+    // Samples that make use of stencil will require a depth + stencil format, so we select from a different list
+    if(requiresStencil) {
+        validFormat = vks::tools::getSupportedDepthStencilFormat(device.physicalDevice, &depthFormat);
+    } else {
+        validFormat = vks::tools::getSupportedDepthFormat(physicalDevice, &depthFormat);
+    }
+    assert(validFormat);
+
+    //swapChain.setContext(instance, physicalDevice, device);
+
+    // Create synchronization objects
+    VkSemaphoreCreateInfo semaphoreCreateInfo = vks::initializers::semaphoreCreateInfo();
+    // Create a semaphore used to synchronize image presentation
+    // Ensures that the image is displayed before we start submitting new commands to the queue
+    VK_CHECK_RESULT(vkCreateSemaphore(device.logicalDevice, &semaphoreCreateInfo, nullptr, &semaphores.presentComplete));
+    // Create a semaphore used to synchronize command submission
+    // Ensures that the image is not presented until all commands have been submitted and executed
+    VK_CHECK_RESULT(vkCreateSemaphore(device.logicalDevice, &semaphoreCreateInfo, nullptr, &semaphores.renderComplete));
+
+    // Set up submit info structure
+    // Semaphores will stay the same during application lifetime
+    // Command buffer submission info is set by each example
+    submitInfo = vks::initializers::submitInfo();
+    submitInfo.pWaitDstStageMask = &submitPipelineStages;
+    submitInfo.waitSemaphoreCount = 1;
+    submitInfo.pWaitSemaphores = &semaphores.presentComplete;
+    submitInfo.signalSemaphoreCount = 1;
+    submitInfo.pSignalSemaphores = &semaphores.renderComplete;
+
+    printf("Context Ready. device.logicalDevice:%p\n",device.logicalDevice);
 }
 VKContext::~VKContext(){
-// destroy vkInstance
+    //vkDestroyCommandPool(device, cmdPool, nullptr);
+    vkDestroySemaphore(device.logicalDevice, semaphores.presentComplete, nullptr);
+    vkDestroySemaphore(device.logicalDevice, semaphores.renderComplete, nullptr);
+    //for (auto& fence : waitFences) {
+    //    vkDestroyFence(device, fence, nullptr);
+    //}
+    //device.clean();
+    //
+    vkDeviceWaitIdle(device.logicalDevice);
+    printf("device.commandPool:%p    device.logicalDevice:%p\n",device.commandPool,device.logicalDevice);
+    //if(device.commandPool){
+    //    vkDestroyCommandPool(device.logicalDevice, device.commandPool, nullptr);
+    //}
+    //sleep(1);
+    if(device.logicalDevice){
+        vkDestroyDevice(device.logicalDevice, nullptr);
+    }
+    vkDestroyInstance(vkInstance, nullptr);
 }
+
+void VKContext::enableFeatures(){}
+void VKContext::enableExtensions(){}
