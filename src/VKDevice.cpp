@@ -13,6 +13,7 @@
 #define VK_ENABLE_BETA_EXTENSIONS
 #endif
 
+#include "VKContext.h"
 #include "VKDevice.h"
 using namespace foxintango;
 #include <unordered_set>

@@ -125,43 +125,13 @@ VKContext::VKContext(){
         std::cerr << "Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled";
     }
 
-    VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &vkInstance);
+    VkResult result = vkCreateInstance(&instanceCreateInfo, nullptr, &vulkan);
     if(result != VK_SUCCESS){
         std::cerr << "VKInstance Creating Failed.";
     }
-    printf("VKContext is Ready.\n");
-    // Physical device
-    uint32_t gpuCount = 0;
-    // Get number of available physical devices
-    vkEnumeratePhysicalDevices(vkInstance, &gpuCount, nullptr);
-    if (gpuCount == 0) {
-        return;//FALSE
-    }
-    printf("%d GPU Devices Found.\n",gpuCount);
+    printf("VkInstance is Ready.\n");
 
-    // Enumerate devices
-    std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
-    result = vkEnumeratePhysicalDevices(vkInstance, &gpuCount, physicalDevices.data());
-    if (result != VK_SUCCESS) {
-        printf("Could not enumerate physical devices : \n");
-        return; //FALSE
-    }
-
-    for(std::vector<VkPhysicalDevice>::iterator iter = physicalDevices.begin();iter != physicalDevices.end();iter ++){
-        struct VkPhysicalDeviceProperties deviceProperties;/** /usr/include/vulkan/vulkan_core.h */
-        VkPhysicalDeviceFeatures deviceFeatures;
-        VkPhysicalDeviceMemoryProperties memoryProperties;
-        // Store properties (including limits), features and memory properties of the physical device (so that examples can check against them)
-        vkGetPhysicalDeviceProperties(*iter, &deviceProperties);
-        vkGetPhysicalDeviceFeatures(*iter, &deviceFeatures);
-        vkGetPhysicalDeviceMemoryProperties(*iter, &memoryProperties);
-        printf("%s :\nAPI    Version:%u\nDriver Version:%u\nVendorID:%u\nDeviceID:%u\n",\
-			deviceProperties.deviceName,             \
-			deviceProperties.apiVersion,             \
-			deviceProperties.driverVersion,          \
-			deviceProperties.vendorID,               \
-			deviceProperties.deviceID);
-    }
+    
     // GPU selection
 
     // Select physical device to be used for the Vulkan example
@@ -172,8 +142,11 @@ VKContext::VKContext(){
     // Enable Extensions
     
     VkPhysicalDevice physicalDevice = physicalDevices[selectedDevice];
-    device.bind(physicalDevice);
-    result = device.createLogicalDevice(enabledFeatures,enabledDeviceExtensions,deviceCreatepNextChain,false,VK_QUEUE_GRAPHICS_BIT);
+    VKDevice* device = new VKDevice(physicalDevice);
+    devices.push_back(device);
+    deviceMap.insert(std::pair<std::string,uint32_t>("default",devices.size() - 1));
+    //device.bind(physicalDevice);
+    result = device->createLogicalDevice(enabledFeatures,enabledDeviceExtensions,deviceCreatepNextChain,false,VK_QUEUE_GRAPHICS_BIT);
     if(result != VK_SUCCESS){
         vks::tools::exitFatal("Could not create Vulkan device: \n" + vks::tools::errorString(result), result);
         return;// false;
@@ -181,7 +154,7 @@ VKContext::VKContext(){
     //device.logicalDevice;
 
     // Get a graphics queue from the device
-    vkGetDeviceQueue(device.logicalDevice,device.queueFamilyIndices.graphics, 0, &queue);
+    vkGetDeviceQueue(device->logicalDevice,device.queueFamilyIndices.graphics, 0, &queue);
 
     // Find a suitable depth and/or stencil format
     VkBool32 validFormat{ false };
@@ -220,11 +193,13 @@ VKContext::~VKContext(){
     //vkDestroyCommandPool(device, cmdPool, nullptr);
     vkDestroySemaphore(device.logicalDevice, semaphores.presentComplete, nullptr);
     vkDestroySemaphore(device.logicalDevice, semaphores.renderComplete, nullptr);
-    //for (auto& fence : waitFences) {
-    //    vkDestroyFence(device, fence, nullptr);
-    //}
-    //device.clean();
-    
+    /*
+    for (auto& fence : waitFences) {
+        vkDestroyFence(device, fence, nullptr);
+    }
+    */
+
+    /*
     VkResult res = vkDeviceWaitIdle(device.logicalDevice);
     switch(res){
         case VK_ERROR_DEVICE_LOST:{printf("VK_ERROR_DEVICE_LOST\n");}break;
@@ -234,18 +209,102 @@ VKContext::~VKContext(){
         case VK_ERROR_VALIDATION_FAILED_EXT:{printf("VK_ERROR_VALIDATION_FAILED\n");}break;
         case VK_SUCCESS:{printf("vkDeviceWaitIdle OK\n");}break;
         default:break;
-    }
-    printf("device.commandPool:%p    device.logicalDevice:%p\n",device.commandPool,device.logicalDevice);
-    //if(device.commandPool){
-    //    vkDestroyCommandPool(device.logicalDevice, device.commandPool, nullptr);
-    //}
-    //sleep(1);
-    if(device.logicalDevice != VK_NULL_HANDLE){
-        printf("Destroy Logical Device : %p\n",device.logicalDevice);
-        //vkDestroyDevice(device.logicalDevice, nullptr);
-    }
-    //vkDestroyInstance(vkInstance, nullptr);
+    }*/
+    /** destroy all VKDevice Instances.
+     * */
+    clean();
+    /*
+    vkDestroyInstance(vkInstance, nullptr);
+    */
 }
 
-void VKContext::enableFeatures(){}
-void VKContext::enableExtensions(){}
+void VKContext::clean(){
+    destroyDevices();
+}
+
+void VKContext::enumeratePhysicalDevices(){
+    // Physical device
+    uint32_t gpuCount = 0;
+    // Get number of available physical devices
+    vkEnumeratePhysicalDevices(vulkan, &gpuCount, nullptr);
+    if (gpuCount == 0) {
+        printf("No GPU Device Found.\n");
+        return;
+    }
+    printf("%d GPU Devices Found.\n",gpuCount);
+
+    // Enumerate devices
+    std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
+    result = vkEnumeratePhysicalDevices(vulkan, &gpuCount, physicalDevices.data());
+    if (result != VK_SUCCESS) {
+        printf("Could not enumerate physical devices.\n");
+        return;
+    }
+    
+    for(std::vector<VkPhysicalDevice>::iterator iter = physicalDevices.begin();iter != physicalDevices.end();iter ++){
+        struct VkPhysicalDeviceProperties deviceProperties;/** /usr/include/vulkan/vulkan_core.h */
+        VkPhysicalDeviceFeatures deviceFeatures;
+        VkPhysicalDeviceMemoryProperties memoryProperties;
+        // Store properties (including limits), features and memory properties of the physical device (so that examples can check against them)
+        vkGetPhysicalDeviceProperties(*iter, &deviceProperties);
+        vkGetPhysicalDeviceFeatures(*iter, &deviceFeatures);
+        vkGetPhysicalDeviceMemoryProperties(*iter, &memoryProperties);
+        physicalDeviceMap.insert(std::pair<std::string,VkPhysicalDevice>(deviceProperties.name,*iter));
+        printf("%s :\nAPI    Version:%u\nDriver Version:%u\nVendorID:%u\nDeviceID:%u\n",\
+			deviceProperties.deviceName,             \
+			deviceProperties.apiVersion,             \
+			deviceProperties.driverVersion,          \
+			deviceProperties.vendorID,               \
+			deviceProperties.deviceID);
+    }
+}
+
+VKDevice* VKContext::createDevice(VkPhysicalDevice           physicalDevice,
+                                  VkPhysicalDeviceFeatures   enabledFeatures,
+                                  std::vector<const char *>  enabledDeviceExtensions,
+                                  void*                      pNextChain,
+                                  bool                       useSwapChain,
+                                  VkQueueFlags               requestedQueueTypes,
+                                  const char*                name){
+    VKDevice* device = new VKDevice(physicalDevice);
+    if(device) {
+        VkResult result = device->createLogicalDevice(enabledFeatures,enabledDeviceExtensions,pNextChain,useSwapChain,requestedQueueTypes);
+        if(result != VK_SUCCESS){
+            vks::tools::exitFatal("Could not create Vulkan device: \n" + vks::tools::errorString(result), result);
+        }
+
+        std::string deviceName = name ? name : std::string("VKDevice-") + std::to_string(deviceMap.size());
+	device->name = deviceName;
+	deviceMap.insert(std::pair<std::string,uint32_t>(deviceName,device));
+    }
+
+    return device;
+}
+
+VKDevice* VKContext::createDevice(const char*                physicalDeviceName,
+                                  VkPhysicalDeviceFeatures   enabledFeatures,
+                                  std::vector<const char *>  enabledDeviceExtensions,
+                                  void*                      pNextChain,
+                                  bool                       useSwapChain,
+                                  VkQueueFlags               requestedQueueTypes,
+                                  const char*                name){
+    return createDevice(physicalDeviceAt(physicalDeviceName,enabledFeatures,enabledDeviceExtensions,pNextChain,useSwapChain,requrestedQueueTypes,name);
+}
+
+void VKContext::destroyDevice(VKDevice*   device);
+void VKContext::destroyDevice(const char* name);
+void VKContext::destroyDevices(){
+        
+}
+
+VKDevice* VKContext::deviceAt(const char* name){
+    return deviceMap.count(name) ? deviceMap.at(name) : nullptr;
+}
+
+VkPhysicalDevice VKContext::physicalDeviceAt(const char* name){
+    return physicalDeviceMap.count(name) ? physicalDeviceMap.at(name) : VK_NULL_HANDLE;
+}
+
+void VKContext::enableInstanceExtensions();
+void VKContext::enableDeviceFeatures(){}
+void VKContext::enableDeviceExtensions(){}

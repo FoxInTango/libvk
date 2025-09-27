@@ -1,9 +1,31 @@
 #ifndef _LIBVK_SURFACE_H_
 #define _LIBVK_SURFACE_H_
+#include "VKDevice.h"
 #include <libcpp/libcpp.h>
+#include <vulkan/vulkan.h>
+#include <vector>
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
-class foxintangoAPI VKSurface{};
+enum VKSurfaceType{
+TEXTURE_SURFACE,
+HEADLESS_SURFACE,
+WINDOW_SURFACE,
+#ifdef PLATFORM_LINUX
+DISPLAY_SURFACE
+#endif
+};
+class foxintangoAPI VKSurface{
+protected:
+    VKDevice*                device{ nullptr };
+    VkFormat                 colorFormat{};
+    VkColorSpaceKHR          colorSpace{};
+    std::vector<VkImage>     images{};
+    std::vector<VkImageView> imageViews{};
+public:
+    VKSurface();
+    virtual ~VKSurface();
+};
+
 namespaceEnd
-EXTERN_C_ENG
+EXTERN_C_END
 #endif

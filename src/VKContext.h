@@ -8,18 +8,46 @@
 #include "VKBuffer.h"
 #include <libcpp/libcpp.h>
 #include <vulkan/vulkan.h>
+#include <string>
+#include <map>
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
 class foxintangoAPI VKContext{
 protected:
-    VKDevice   device;
-    VkInstance vkInstance;
+    std::map<std::string,VKDevice*>         deviceMap;
+    std::map<std::string,VkPhysicalDevice>  physicalDeviceMap;
+    VkInstance vulkan;
 public:
     VKContext();
     virtual ~VKContext();
 public:
-    virtual void enableFeatures();
-    virtual void enableExtensions();
+    void clean();
+public:
+    void enumeratePhysicalDevices();
+    VKDevice* createDevice(VkPhysicalDevice           physicalDevice,
+                           VkPhysicalDeviceFeatures   enabledFeatures,
+                           std::vector<const char *>  enabledExtensions,
+                           void*                      pNextChain,
+                           bool                       useSwapChain        = true,
+                           VkQueueFlags               requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
+                           const char*                name                = nullptr);
+    VKDevice* createDevice(const char*                physicalDeviceName,
+                           VkPhysicalDeviceFeatures   enabledFeatures,
+                           std::vector<const char *>  enabledExtensions,
+                           void*                      pNextChain,
+                           bool                       useSwapChain        = true,
+                           VkQueueFlags               requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT,
+                           const char*                name                = nullptr);
+    void destroyDevice(VKDevice*   device);
+    void destroyDevice(const char* name);
+    void destroyDevices();
+public:
+    VKDevice*        deviceAt(const char* name);
+    VkPhysicalDevice physicalDeviceAt(const char* name);
+public:
+    virtual void enableInstanceExtensions();
+    virtual void enableDeviceFeatures();
+    virtual void enableDeviceExtensions();
 };
 namespaceEnd
 EXTERN_C_END

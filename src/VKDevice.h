@@ -23,34 +23,39 @@
 #include <exception>
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
+class VKContext;
 class foxintangoAPI VKDevice {
 friend class VKContext;
+friend class VKSurface;
 protected:
-	/** @brief Physical device representation */
-	VkPhysicalDevice physicalDevice;
-	/** @brief Logical device representation (application's view of the device) */
-	VkDevice logicalDevice;
-	/** @brief Properties of the physical device including limits that the application can check against */
-	VkPhysicalDeviceProperties properties;
-	/** @brief Features of the physical device that an application can use to check if a feature is supported */
-	VkPhysicalDeviceFeatures features;
-	/** @brief Features that have been enabled for use on the physical device */
-	VkPhysicalDeviceFeatures enabledFeatures;
-	/** @brief Memory types and heaps of the physical device */
-	VkPhysicalDeviceMemoryProperties memoryProperties;
-	/** @brief Queue family properties of the physical device */
-	std::vector<VkQueueFamilyProperties> queueFamilyProperties;
-	/** @brief List of extensions supported by the device */
-	std::vector<std::string> supportedExtensions;
-	/** @brief Default command pool for the graphics queue family index */
-	VkCommandPool commandPool = VK_NULL_HANDLE;
-	/** @brief Contains queue family indices */
-	struct
-	{
-		uint32_t graphics;
-		uint32_t compute;
-		uint32_t transfer;
-	} queueFamilyIndices;
+    VKContext*  context;
+    /** name of VKDevice for fetching VKDevice from related VKContext deviceMap
+     * */
+    std::string name;
+    /** @brief Physical device representation */
+    VkPhysicalDevice physicalDevice;
+    /** @brief Logical device representation (application's view of the device) */
+    VkDevice logicalDevice;
+    /** @brief Properties of the physical device including limits that the application can check against */
+    VkPhysicalDeviceProperties properties;
+    /** @brief Features of the physical device that an application can use to check if a feature is supported */
+    VkPhysicalDeviceFeatures features;
+    /** @brief Features that have been enabled for use on the physical device */
+    VkPhysicalDeviceFeatures enabledFeatures;
+    /** @brief Memory types and heaps of the physical device */
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    /** @brief Queue family properties of the physical device */
+    std::vector<VkQueueFamilyProperties> queueFamilyProperties;
+    /** @brief List of extensions supported by the device */
+    std::vector<std::string> supportedExtensions;
+    /** @brief Default command pool for the graphics queue family index */
+    VkCommandPool commandPool = VK_NULL_HANDLE;
+    /** @brief Contains queue family indices */
+    struct {
+        uint32_t graphics;
+        uint32_t compute;
+        uint32_t transfer;
+    } queueFamilyIndices;
 public:
 /*
     operator VkDevice() const{
@@ -61,10 +66,15 @@ public:
     VKDevice(VkPhysicalDevice physicalDevice);
     ~VKDevice();
     void bind(VkPhysicalDevice physicalDevice);
+    void prepare();
     void clean();
     uint32_t        getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties, VkBool32 *memTypeFound = nullptr) const;
     uint32_t        getQueueFamilyIndex(VkQueueFlags queueFlags) const;
-    VkResult        createLogicalDevice(VkPhysicalDeviceFeatures enabledFeatures, std::vector<const char *> enabledExtensions, void *pNextChain, bool useSwapChain = true, VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+    VkResult        createLogicalDevice(VkPhysicalDeviceFeatures   enabledFeatures,
+                                        std::vector<const char *>  enabledExtensions,
+                                        void*                      pNextChain,
+                                        bool                       useSwapChain        = true,
+                                        VkQueueFlags               requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
     VkResult        createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, VkBuffer *buffer, VkDeviceMemory *memory, void *data = nullptr);
     VkResult        createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VKBuffer *buffer, VkDeviceSize size, void *data = nullptr);
     void            copyBuffer(VKBuffer *src, VKBuffer *dst, VkQueue queue, VkBufferCopy *copyRegion = nullptr);
