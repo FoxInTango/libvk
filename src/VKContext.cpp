@@ -1,5 +1,6 @@
 #include "VKContext.h"
 using namespace foxintango;
+#include "VKDevice.h"
 #include <iostream>
 #include <string>
 #include <vector>
@@ -131,8 +132,10 @@ VKContext::VKContext(){
     }
     printf("VkInstance is Ready.\n");
 
-    
-    // GPU selection
+     
+}
+/**
+ // GPU selection
 
     // Select physical device to be used for the Vulkan example
     // Defaults to the first device unless specified by command line
@@ -188,11 +191,11 @@ VKContext::VKContext(){
     submitInfo.pSignalSemaphores = &semaphores.renderComplete;
 
     printf("Context Ready. device.logicalDevice:%p\n",device.logicalDevice);
-}
+ * */
 VKContext::~VKContext(){
     //vkDestroyCommandPool(device, cmdPool, nullptr);
-    vkDestroySemaphore(device.logicalDevice, semaphores.presentComplete, nullptr);
-    vkDestroySemaphore(device.logicalDevice, semaphores.renderComplete, nullptr);
+    //vkDestroySemaphore(device.logicalDevice, semaphores.presentComplete, nullptr);
+    //vkDestroySemaphore(device.logicalDevice, semaphores.renderComplete, nullptr);
     /*
     for (auto& fence : waitFences) {
         vkDestroyFence(device, fence, nullptr);
@@ -235,7 +238,7 @@ void VKContext::enumeratePhysicalDevices(){
 
     // Enumerate devices
     std::vector<VkPhysicalDevice> physicalDevices(gpuCount);
-    result = vkEnumeratePhysicalDevices(vulkan, &gpuCount, physicalDevices.data());
+    VkResult result = vkEnumeratePhysicalDevices(vulkan, &gpuCount, physicalDevices.data());
     if (result != VK_SUCCESS) {
         printf("Could not enumerate physical devices.\n");
         return;
@@ -249,7 +252,7 @@ void VKContext::enumeratePhysicalDevices(){
         vkGetPhysicalDeviceProperties(*iter, &deviceProperties);
         vkGetPhysicalDeviceFeatures(*iter, &deviceFeatures);
         vkGetPhysicalDeviceMemoryProperties(*iter, &memoryProperties);
-        physicalDeviceMap.insert(std::pair<std::string,VkPhysicalDevice>(deviceProperties.name,*iter));
+        physicalDeviceMap.insert(std::pair<std::string,VkPhysicalDevice>(deviceProperties.deviceName,*iter));
         printf("%s :\nAPI    Version:%u\nDriver Version:%u\nVendorID:%u\nDeviceID:%u\n",\
 			deviceProperties.deviceName,             \
 			deviceProperties.apiVersion,             \
@@ -275,7 +278,7 @@ VKDevice* VKContext::createDevice(VkPhysicalDevice           physicalDevice,
 
         std::string deviceName = name ? name : std::string("VKDevice-") + std::to_string(deviceMap.size());
 	device->name = deviceName;
-	deviceMap.insert(std::pair<std::string,uint32_t>(deviceName,device));
+	deviceMap.insert(std::pair<std::string,VKDevice*>(deviceName,device));
     }
 
     return device;
@@ -288,13 +291,29 @@ VKDevice* VKContext::createDevice(const char*                physicalDeviceName,
                                   bool                       useSwapChain,
                                   VkQueueFlags               requestedQueueTypes,
                                   const char*                name){
-    return createDevice(physicalDeviceAt(physicalDeviceName,enabledFeatures,enabledDeviceExtensions,pNextChain,useSwapChain,requrestedQueueTypes,name);
+    return createDevice(physicalDeviceAt(physicalDeviceName),enabledFeatures,enabledDeviceExtensions,pNextChain,useSwapChain,requestedQueueTypes,name);
 }
 
-void VKContext::destroyDevice(VKDevice*   device);
-void VKContext::destroyDevice(const char* name);
+void VKContext::destroyDevice(VKDevice*   device){
+    if(device) { 
+        delete device;
+        deviceMap.erase(device->name);
+    }
+
+}
+void VKContext::destroyDevice(const char* name){
+    if(deviceMap.count(name)){
+        VKDevice* device = deviceMap.at(name);
+	delete device;
+	deviceMap.erase(name);
+    }
+}
 void VKContext::destroyDevices(){
-        
+    for(std::map<std::string,VKDevice*>::iterator iter = deviceMap.begin();iter != deviceMap.end();iter ++){
+        VKDevice* device = iter->second;
+	delete device;
+	deviceMap.erase(iter);
+    }
 }
 
 VKDevice* VKContext::deviceAt(const char* name){
@@ -305,6 +324,6 @@ VkPhysicalDevice VKContext::physicalDeviceAt(const char* name){
     return physicalDeviceMap.count(name) ? physicalDeviceMap.at(name) : VK_NULL_HANDLE;
 }
 
-void VKContext::enableInstanceExtensions();
+void VKContext::enableInstanceExtensions(){}
 void VKContext::enableDeviceFeatures(){}
 void VKContext::enableDeviceExtensions(){}

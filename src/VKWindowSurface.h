@@ -10,7 +10,6 @@ VkSurfaceKHR   surfaceKHR   { VK_NULL_HANDLE };
 VkSwapchainKHR swapchainKHR { VK_NULL_HANDLE };
 protected:
     VKWindowSurface();
-public:
     /**
      * If width or height is zero,the window will be fullscreen.
      * */

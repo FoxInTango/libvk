@@ -1,6 +1,5 @@
 #ifndef _LIBVK_SURFACE_H_
 #define _LIBVK_SURFACE_H_
-#include "VKDevice.h"
 #include <libcpp/libcpp.h>
 #include <vulkan/vulkan.h>
 #include <vector>
@@ -14,6 +13,7 @@ WINDOW_SURFACE,
 DISPLAY_SURFACE
 #endif
 };
+class VKDevice;
 class foxintangoAPI VKSurface{
 protected:
     VKDevice*                device{ nullptr };
@@ -21,7 +21,7 @@ protected:
     VkColorSpaceKHR          colorSpace{};
     std::vector<VkImage>     images{};
     std::vector<VkImageView> imageViews{};
-public:
+protected:
     VKSurface();
     virtual ~VKSurface();
 };

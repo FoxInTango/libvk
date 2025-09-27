@@ -1,5 +1,7 @@
 #include "../VKWindowSurface.h"
 using namespace foxintango;
+#include <wayland-client.h>
+//#include "xdg-shell-client-protocol.h"
 #include <assert.h>
 /**
  * 1,First we check if there's a wayland compositor running.Create a wayland vulkan surface if yes.
@@ -8,48 +10,54 @@ using namespace foxintango;
  * */
 
 #ifdef PLATFORM_LINUX
+#include "../VKContext.h"
 bool has_wayland(){ return false; }
 bool has_xserver(){ return false; }
+void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR surfaceKHR,uint32_t width, uint32_t height);
+
 VKWindowSurface::VKWindowSurface(){}
 VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar,char* title){
-    assert(this->context);
     assert(this->device);
     VkResult res;
     if(has_wayland()){ 
+/*
     VkWaylandSurfaceCreateInfoKHR surfaceCreateInfo = {};
     surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR;
     surfaceCreateInfo.display = display;
     surfaceCreateInfo.surface = window;
     res = vkCreateWaylandSurfaceKHR(this->context->vkInstance, &surfaceCreateInfo, nullptr, &surfaceKHR);
+*/
     return; }
     if(has_xserver()){ 
-        VkXcbSurfaceCreateInfoKHR surfaceCreateInfo = {};
+/*      VkXcbSurfaceCreateInfoKHR surfaceCreateInfo = {};
         surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XCB_SURFACE_CREATE_INFO_KHR;
         surfaceCreateInfo.connection = connection;
         surfaceCreateInfo.window = window;
         res = vkCreateXcbSurfaceKHR(this->context->vkInstance, &surfaceCreateInfo, nullptr, &surface);
+*/
     return; }
 
     //create display surface
-
+    createDisplaySurface(this->device->context->vulkan,this->device->physicalDevice,surfaceKHR,width,height);
+/*
     if(res != VK_SUCCESS) {
         vks::tools::exitFatal("Could not create surface!", err);
     }
-
+*/
     // Get available queue family properties
     uint32_t queueCount;
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, NULL);
+    vkGetPhysicalDeviceQueueFamilyProperties(this->device->physicalDevice, &queueCount, NULL);
     assert(queueCount >= 1);
 
     std::vector<VkQueueFamilyProperties> queueProps(queueCount);
-    vkGetPhysicalDeviceQueueFamilyProperties(physicalDevice, &queueCount, queueProps.data());
+    vkGetPhysicalDeviceQueueFamilyProperties(this->device->physicalDevice, &queueCount, queueProps.data());
 
     // Iterate over each queue to learn whether it supports presenting:
     // Find a queue with present support
     // Will be used to present the swap chain images to the windowing system
     std::vector<VkBool32> supportsPresent(queueCount);
     for(uint32_t i = 0; i < queueCount; i++){
-        vkGetPhysicalDeviceSurfaceSupportKHR(physicalDevice, i, surface, &supportsPresent[i]);
+        vkGetPhysicalDeviceSurfaceSupportKHR(this->device->physicalDevice, i,this->surfaceKHR, &supportsPresent[i]);
     }
 
     // Search for a graphics and a present queue in the array of queue
@@ -89,15 +97,15 @@ VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar
         vks::tools::exitFatal("Separate graphics and presenting queues are not supported yet!", -1);
     }
 
-    queueNodeIndex = graphicsQueueNodeIndex;
+    // queueNodeIndex = graphicsQueueNodeIndex;
 
     // Get list of supported surface formats
     uint32_t formatCount;
-    VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, NULL));
+    VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(this->device->physicalDevice,this->surfaceKHR,&formatCount,NULL));
     assert(formatCount > 0);
 
     std::vector<VkSurfaceFormatKHR> surfaceFormats(formatCount);
-    VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface, &formatCount, surfaceFormats.data()));
+    VK_CHECK_RESULT(vkGetPhysicalDeviceSurfaceFormatsKHR(this->device->physicalDevice,this->surfaceKHR,&formatCount,surfaceFormats.data()));
     // We want to get a format that best suits our needs, so we try to get one from a set of preferred formats
     // Initialize the format to the first one returned by the implementation in case we can't find one of the preffered formats
     VkSurfaceFormatKHR selectedFormat = surfaceFormats[0];
@@ -122,7 +130,7 @@ VKWindowSurface::~VKWindowSurface(){}
 /**
 * Create direct to display surface
 */	
-void createDisplaySurface(uint32_t width, uint32_t height)
+void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR surfaceKHR,uint32_t width, uint32_t height)
 {
 	uint32_t displayPropertyCount;
 		
@@ -253,7 +261,7 @@ void createDisplaySurface(uint32_t width, uint32_t height)
 	surfaceInfo.imageExtent.width = width;
 	surfaceInfo.imageExtent.height = height;
 
-	VkResult result = vkCreateDisplayPlaneSurfaceKHR(instance, &surfaceInfo, NULL, &surface);
+	VkResult result = vkCreateDisplayPlaneSurfaceKHR(instance, &surfaceInfo, NULL, &surfaceKHR);
 	if (result !=VK_SUCCESS) {
 		vks::tools::exitFatal("Failed to create surface!", result);
 	}

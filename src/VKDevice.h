@@ -9,6 +9,10 @@
  */
 #ifndef _LIBVK_DEVICE_H_
 #define _LIBVK_DEVICE_H_
+#include "VKHeadlessSurface.h"
+#include "VKWindowSurface.h"
+#include "VKTexture.h"
+#include "VKSurface.h"
 #include "VKBuffer.h"
 #include "VKTools.h"
 
@@ -27,6 +31,9 @@ class VKContext;
 class foxintangoAPI VKDevice {
 friend class VKContext;
 friend class VKSurface;
+friend class VKTexture;
+friend class VKWindowSurface;
+friend class VKHeadlessSurface;
 protected:
     VKContext*  context;
     /** name of VKDevice for fetching VKDevice from related VKContext deviceMap
@@ -56,7 +63,7 @@ protected:
         uint32_t compute;
         uint32_t transfer;
     } queueFamilyIndices;
-public:
+protected:
 /*
     operator VkDevice() const{
         return logicalDevice;
@@ -68,13 +75,14 @@ public:
     void bind(VkPhysicalDevice physicalDevice);
     void prepare();
     void clean();
-    uint32_t        getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties, VkBool32 *memTypeFound = nullptr) const;
-    uint32_t        getQueueFamilyIndex(VkQueueFlags queueFlags) const;
     VkResult        createLogicalDevice(VkPhysicalDeviceFeatures   enabledFeatures,
                                         std::vector<const char *>  enabledExtensions,
                                         void*                      pNextChain,
                                         bool                       useSwapChain        = true,
                                         VkQueueFlags               requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT | VK_QUEUE_COMPUTE_BIT);
+public:
+    uint32_t        getMemoryType(uint32_t typeBits, VkMemoryPropertyFlags properties, VkBool32 *memTypeFound = nullptr) const;
+    uint32_t        getQueueFamilyIndex(VkQueueFlags queueFlags) const;
     VkResult        createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VkDeviceSize size, VkBuffer *buffer, VkDeviceMemory *memory, void *data = nullptr);
     VkResult        createBuffer(VkBufferUsageFlags usageFlags, VkMemoryPropertyFlags memoryPropertyFlags, VKBuffer *buffer, VkDeviceSize size, void *data = nullptr);
     void            copyBuffer(VKBuffer *src, VKBuffer *dst, VkQueue queue, VkBufferCopy *copyRegion = nullptr);
@@ -85,6 +93,11 @@ public:
     void            flushCommandBuffer(VkCommandBuffer commandBuffer, VkQueue queue, bool free = true);
     bool            extensionSupported(std::string extension);
     VkFormat        getSupportedDepthFormat(bool checkSamplingSupport);
+public:
+    VKTexture*         createTextureFromFile(char* path);
+    VKTexture*         createTextureFromMemory(char* data,uint32_t width,uint32_t height,VkFormat format);
+    VKWindowSurface*   createWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
+    VKHeadlessSurface* createHeadlessSurface(uint32_t width,uint32_t height);
 };
 namespaceEnd
 EXTERN_C_END

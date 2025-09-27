@@ -13,6 +13,11 @@
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
 class foxintangoAPI VKContext{
+friend class VKDevice;
+friend class VKSurface;
+friend class VKTexture;
+friend class VKWindowSurface;
+friend class VKHeadlessSurface;
 protected:
     std::map<std::string,VKDevice*>         deviceMap;
     std::map<std::string,VkPhysicalDevice>  physicalDeviceMap;
