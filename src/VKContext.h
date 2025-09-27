@@ -12,7 +12,7 @@ EXTERN_C_BEGIN
 namespaceBegin(foxintango)
 class foxintangoAPI VKContext{
 protected:
-    foxintango::VKDevice   device;
+    VKDevice   device;
     VkInstance vkInstance;
 public:
     VKContext();

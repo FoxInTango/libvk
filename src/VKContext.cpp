@@ -95,7 +95,7 @@ VKContext::VKContext(){
     appInfo.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     appInfo.pApplicationName = "VulkanApplication";
     appInfo.pEngineName      = "VulkanContext";
-    appInfo.apiVersion       = VK_API_VERSION_1_0;//apiVersion;
+    appInfo.apiVersion       = VK_API_VERSION_1_3;//apiVersion;
 
     VkInstanceCreateInfo instanceCreateInfo{};
     instanceCreateInfo.sType            = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -166,14 +166,14 @@ VKContext::VKContext(){
 
     // Select physical device to be used for the Vulkan example
     // Defaults to the first device unless specified by command line
-    uint32_t selectedDevice = 0;
+    uint32_t selectedDevice = 1;
     // TODO
     // Enable Features 
     // Enable Extensions
     
     VkPhysicalDevice physicalDevice = physicalDevices[selectedDevice];
     device.bind(physicalDevice);
-    result = device.createLogicalDevice(enabledFeatures,enabledDeviceExtensions,deviceCreatepNextChain,false);
+    result = device.createLogicalDevice(enabledFeatures,enabledDeviceExtensions,deviceCreatepNextChain,false,VK_QUEUE_GRAPHICS_BIT);
     if(result != VK_SUCCESS){
         vks::tools::exitFatal("Could not create Vulkan device: \n" + vks::tools::errorString(result), result);
         return;// false;
@@ -181,7 +181,7 @@ VKContext::VKContext(){
     //device.logicalDevice;
 
     // Get a graphics queue from the device
-    //vkGetDeviceQueue(device.logicalDevice,device.queueFamilyIndices.graphics, 0, &queue);
+    vkGetDeviceQueue(device.logicalDevice,device.queueFamilyIndices.graphics, 0, &queue);
 
     // Find a suitable depth and/or stencil format
     VkBool32 validFormat{ false };
@@ -224,17 +224,27 @@ VKContext::~VKContext(){
     //    vkDestroyFence(device, fence, nullptr);
     //}
     //device.clean();
-    //
-    vkDeviceWaitIdle(device.logicalDevice);
+    
+    VkResult res = vkDeviceWaitIdle(device.logicalDevice);
+    switch(res){
+        case VK_ERROR_DEVICE_LOST:{printf("VK_ERROR_DEVICE_LOST\n");}break;
+        case VK_ERROR_OUT_OF_DEVICE_MEMORY:{printf("VK_ERROR_OUT_OF_DEVICE_MEMORY\n");}break;
+        case VK_ERROR_OUT_OF_HOST_MEMORY:{printf("VK_ERROR_OUT_OF_HOST_MEMORY\n");};break;
+        case VK_ERROR_UNKNOWN:{printf("VK_ERROR_UNNOWN\n");}break;
+        case VK_ERROR_VALIDATION_FAILED_EXT:{printf("VK_ERROR_VALIDATION_FAILED\n");}break;
+        case VK_SUCCESS:{printf("vkDeviceWaitIdle OK\n");}break;
+        default:break;
+    }
     printf("device.commandPool:%p    device.logicalDevice:%p\n",device.commandPool,device.logicalDevice);
     //if(device.commandPool){
     //    vkDestroyCommandPool(device.logicalDevice, device.commandPool, nullptr);
     //}
     //sleep(1);
-    if(device.logicalDevice){
-        vkDestroyDevice(device.logicalDevice, nullptr);
+    if(device.logicalDevice != VK_NULL_HANDLE){
+        printf("Destroy Logical Device : %p\n",device.logicalDevice);
+        //vkDestroyDevice(device.logicalDevice, nullptr);
     }
-    vkDestroyInstance(vkInstance, nullptr);
+    //vkDestroyInstance(vkInstance, nullptr);
 }
 
 void VKContext::enableFeatures(){}
