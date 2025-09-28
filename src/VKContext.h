@@ -29,6 +29,7 @@ public:
     void clean();
 public:
     void enumeratePhysicalDevices();
+    void enumerateDisplay();
     VKDevice* createDevice(VkPhysicalDevice           physicalDevice,
                            VkPhysicalDeviceFeatures   enabledFeatures,
                            std::vector<const char *>  enabledExtensions,
@@ -49,6 +50,11 @@ public:
 public:
     VKDevice*        deviceAt(const char* name);
     VkPhysicalDevice physicalDeviceAt(const char* name);
+public:
+    VKTexture*         createTextureFromFile(VKDevice*   targetDevice,char* path);
+    VKTexture*         createTextureFromMemory(VKDevice* targetDevice,char*    data, uint32_t width, uint32_t height,             VkFormat format);
+    VKWindowSurface*   createWindowSurface(VKDevice*     targetDevice,uint32_t width,uint32_t height,bool     hasTitleBar = false,char* title = "Vulkan Window");
+    VKHeadlessSurface* createHeadlessSurface(VKDevice*   targetDevice,uint32_t width,uint32_t height);
 public:
     virtual void enableInstanceExtensions();
     virtual void enableDeviceFeatures();

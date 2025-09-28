@@ -16,6 +16,11 @@ protected:
     VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
     
     virtual ~VKWindowSurface();
+private:
+    void setupSwapchain(uint32_t& width, uint32_t& height,bool vsync, bool fullscreen);
+    void clean();
+    VkResult queuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore);
+    VkResult acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex);
 };
 namespaceEnd
 EXTERN_C_END

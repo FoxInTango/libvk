@@ -130,9 +130,7 @@ VKContext::VKContext(){
     if(result != VK_SUCCESS){
         std::cerr << "VKInstance Creating Failed.";
     }
-    printf("VkInstance is Ready.\n");
-
-     
+    printf("VkInstance is Ready.\n");     
 }
 /**
  // GPU selection
@@ -253,13 +251,73 @@ void VKContext::enumeratePhysicalDevices(){
         vkGetPhysicalDeviceFeatures(*iter, &deviceFeatures);
         vkGetPhysicalDeviceMemoryProperties(*iter, &memoryProperties);
         physicalDeviceMap.insert(std::pair<std::string,VkPhysicalDevice>(deviceProperties.deviceName,*iter));
-        printf("%s :\nAPI    Version:%u\nDriver Version:%u\nVendorID:%u\nDeviceID:%u\n",\
+        /*
+	printf("%s :\nAPI    Version:%u\nDriver Version:%u\nVendorID:%u\nDeviceID:%u\n",\
 			deviceProperties.deviceName,             \
 			deviceProperties.apiVersion,             \
 			deviceProperties.driverVersion,          \
 			deviceProperties.vendorID,               \
 			deviceProperties.deviceID);
+        */
+        std::cout << "Device [" << iter - physicalDevices.begin() << "] : " << deviceProperties.deviceName << std::endl;
+        std::cout << " Type   : " << vks::tools::physicalDeviceTypeString(deviceProperties.deviceType) << "\n";
+        std::cout << " API    : " << (deviceProperties.apiVersion    >> 22) << "." << ((deviceProperties.apiVersion    >> 12) & 0x3ff) << "." << (deviceProperties.apiVersion    & 0xfff)    << "\n";
+        std::cout << " Driver : " << (deviceProperties.driverVersion >> 22) << "." << ((deviceProperties.driverVersion >> 12) & 0x3ff) << "." << (deviceProperties.driverVersion & 0xfff) << "\n";
     }
+}
+
+void VKContext::enumerateDisplay(){
+
+    uint32_t displayPropertyCount;
+
+    for(std::map<std::string,VkPhysicalDevice>::iterator iter = physicalDeviceMap.begin();iter != physicalDeviceMap.end();iter ++) {
+    std::cout << "GPUDevice: " << iter->first << std::endl;
+    // Get display property
+    VkPhysicalDevice physicalDevice = iter->second;
+    vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, NULL);
+    printf("displayPropertyCount: %u\n",displayPropertyCount);
+        	
+    VkDisplayPropertiesKHR* pDisplayProperties = new VkDisplayPropertiesKHR[displayPropertyCount];
+    vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, pDisplayProperties);
+    // Get plane property
+    uint32_t planePropertyCount;
+    vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, NULL);
+    printf("planePropertyCount: %u\n",planePropertyCount);
+    VkDisplayPlanePropertiesKHR* pPlaneProperties = new VkDisplayPlanePropertiesKHR[planePropertyCount];
+    vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, pPlaneProperties);
+
+    VkDisplayKHR display = VK_NULL_HANDLE;
+    VkDisplayModeKHR displayMode;
+    VkDisplayModePropertiesKHR* pModeProperties;
+    bool foundMode = false;
+         
+    for(uint32_t i = 0; i < displayPropertyCount;++i){
+        std::cout << "Display " << pDisplayProperties[i].displayName << ":" << std::endl;
+        display = pDisplayProperties[i].display;
+        uint32_t modeCount;
+        vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, NULL);
+        pModeProperties = new VkDisplayModePropertiesKHR[modeCount];
+        vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, pModeProperties);
+        if( 1 > modeCount) {
+             printf("no mode found for display %d with modeCount: %u\n",i,modeCount);
+        } else printf("modeCount : %u \n",modeCount);
+
+        for(uint32_t j = 0; j < modeCount; ++j){
+            const VkDisplayModePropertiesKHR* mode = &pModeProperties[j];
+            // to be delete : sparrow
+            printf("mode %d width: %d height: %d\n",j,mode->parameters.visibleRegion.width,mode->parameters.visibleRegion.height);
+            /*
+	    if(mode->parameters.visibleRegion.width == width && mode->parameters.visibleRegion.height == height){
+                displayMode = mode->displayMode;
+                foundMode = true;
+                break;
+            }
+            */
+        }
+        if(foundMode){ break;}
+        delete [] pModeProperties;
+    }
+    } 
 }
 
 VKDevice* VKContext::createDevice(VkPhysicalDevice           physicalDevice,
