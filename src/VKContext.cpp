@@ -70,6 +70,7 @@ bool requiresStencil{ false };
  *  1,Debug
  *  2,Mac
  * */
+std::map<std::string,VkPhysicalDevice>  physicalDeviceMap;
 VKContext::VKContext(){
     #ifdef PLATFORM_LINUX
     instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);

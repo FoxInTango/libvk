@@ -20,7 +20,6 @@ friend class VKWindowSurface;
 friend class VKHeadlessSurface;
 protected:
     std::map<std::string,VKDevice*>         deviceMap;
-    std::map<std::string,VkPhysicalDevice>  physicalDeviceMap;
     VkInstance vulkan;
 public:
     VKContext();

@@ -13,7 +13,7 @@ using namespace foxintango;
 #include "../VKContext.h"
 bool has_wayland(){ return false; }
 bool has_xserver(){ return false; }
-void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR surfaceKHR,uint32_t width, uint32_t height);
+void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR& surfaceKHR,uint32_t width, uint32_t height);
 
 VKWindowSurface::VKWindowSurface(){}
 VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar,char* title){
@@ -38,7 +38,7 @@ VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar
     return; }
 
     //create display surface
-    createDisplaySurface(this->device->context->vulkan,this->device->physicalDevice,surfaceKHR,width,height);
+    createDisplaySurface(this->device->context->vulkan,this->device->physicalDevice,this->surfaceKHR,width,height);
 /*
     if(res != VK_SUCCESS) {
         vks::tools::exitFatal("Could not create surface!", err);
@@ -130,7 +130,7 @@ VKWindowSurface::~VKWindowSurface(){}
 /**
 * Create direct to display surface
 */	
-void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR surfaceKHR,uint32_t width, uint32_t height)
+void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR& surfaceKHR,uint32_t width, uint32_t height)
 {
 	uint32_t displayPropertyCount;
 		
