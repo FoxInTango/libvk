@@ -28,6 +28,11 @@
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
 class VKContext;
+/** 
+ * One VkRenderpass , one VkCommandPool,one VkPipelineCache and one pipeline of every pipeline type per VKDevice
+ * About vkDeviceQueue : createLogicalDevice
+ *                       vkGetDeviceQueue(device, vulkanDevice->queueFamilyIndices.graphics, 0, &queue); sampes/vulkanexamplebase.cpp 
+ * */
 class foxintangoAPI VKDevice {
 friend class VKContext;
 friend class VKSurface;

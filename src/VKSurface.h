@@ -14,6 +14,10 @@ DISPLAY_SURFACE
 #endif
 };
 class VKDevice;
+/** 
+ * One vkCommandBuffer per VKSurface image/imageView with vkCommandPool from VKDevice
+ * One vkFramebuffer   per VKSurface image/imageView
+ * */
 class foxintangoAPI VKSurface{
 protected:
     VKDevice*                device{ nullptr };
