@@ -1,19 +1,98 @@
-#include "../VKWindowSurface.h"
-using namespace foxintango;
-#include <wayland-client.h>
-//#include "xdg-shell-client-protocol.h"
-#include <assert.h>
 /**
  * 1,First we check if there's a wayland compositor running.Create a wayland vulkan surface if yes.
  * 2,Then we check if there's a x-server running.Create a xcb or xlib vulkan surface if yes.
  * 3,Try to create a display surface.
  * */
-
 #ifdef PLATFORM_LINUX
+#include "../VKDisplay.h"
 #include "../VKContext.h"
+#include "../VKWindowSurface.h"
+using namespace foxintango;
+#include <wayland-client.h>
+//#include "xdg-shell-client-protocol.h"
+#include <assert.h>
+#include <map>
+
+std::map<std::string,VKDisplay*> displayMap;
+std::vector<std::string>         displayArray;
+
 bool has_wayland(){ return false; }
 bool has_xserver(){ return false; }
+void enumerateWaylandDisplays() { return; }
+void enumerateXServerDisplays() { return; }
+
 void createDisplaySurface(VkInstance instance,VkPhysicalDevice physicalDevice,VkSurfaceKHR& surfaceKHR,uint32_t width, uint32_t height);
+
+void VKContext::enumerateDisplays(){
+    if(has_wayland()){
+        return enumerateWaylandDisplays();
+    } else if (has_xserver()){
+        return enumerateXServerDisplays();
+    }
+
+    uint32_t displayPropertyCount;
+
+    for(uint32_t i = 0;i < this->physicalDeviceCount();i ++) {
+        
+	// Get display property
+        VkPhysicalDevice physicalDevice = this->physicalDeviceAt(i);
+	if(VK_NULL_HANDLE == physicalDevice) continue;
+        /*
+	vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, NULL);
+        printf("displayPropertyCount: %u\n",displayPropertyCount);
+        	
+        VkDisplayPropertiesKHR* pDisplayProperties = new VkDisplayPropertiesKHR[displayPropertyCount];
+        vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, pDisplayProperties);
+        // Get plane property
+        uint32_t planePropertyCount;
+        vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, NULL);
+        printf("planePropertyCount: %u\n",planePropertyCount);
+        VkDisplayPlanePropertiesKHR* pPlaneProperties = new VkDisplayPlanePropertiesKHR[planePropertyCount];
+        vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, pPlaneProperties);
+        */
+        VkDisplayKHR display = VK_NULL_HANDLE;
+        VkDisplayModeKHR displayMode;
+        VkDisplayModePropertiesKHR* pModeProperties;
+        bool foundMode = false;
+         
+        for(uint32_t i = 0; i < displayPropertyCount;++i){
+            std::cout << "Display " << this->physicalDisplayPropertiesAt(i)->displayName << ":" << std::endl;
+            display = this->physicalDisplayPropertiesAt(i)->display;
+            uint32_t modeCount;
+            vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, NULL);
+            pModeProperties = new VkDisplayModePropertiesKHR[modeCount];
+            vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, pModeProperties);
+            if( 1 > modeCount) {
+                 printf("no mode found for display %d with modeCount: %u\n",i,modeCount);
+            } else printf("modeCount : %u \n",modeCount);
+
+            for(uint32_t j = 0; j < modeCount; ++j){
+                const VkDisplayModePropertiesKHR* mode = &pModeProperties[j];
+                // to be delete : sparrow
+                printf("mode %d width: %d height: %d\n",j,mode->parameters.visibleRegion.width,mode->parameters.visibleRegion.height);
+                /*
+	        if(mode->parameters.visibleRegion.width == width && mode->parameters.visibleRegion.height == height){
+                    displayMode = mode->displayMode;
+                    foundMode = true;
+                    break;
+                }
+                */
+            }
+            if(foundMode){ break;}
+            delete [] pModeProperties;
+        }
+    }
+}
+
+uint32_t   VKContext::displayCount(){
+    return displayMap.size();
+}
+VKDisplay* VKContext::displayAt(uint32_t index){
+    return index < displayArray.size() && displayMap.count(displayArray[index]) ? displayMap.at(displayArray[index]): nullptr;
+}
+VKDisplay* VKContext::displayAt(const char* name){
+    return displayMap.count(name) ? displayMap.at(name) : nullptr;
+}
 
 VKWindowSurface::VKWindowSurface(){}
 VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar,char* title){

@@ -4,6 +4,8 @@
 #include <libcpp/libcpp.h>
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
+/** VKDisplaySurfaces should be created by VKContext Only.
+ * */
 class VKWindowSurface :public VKSurface{
 protected:
 VkSurfaceKHR   surfaceKHR   { VK_NULL_HANDLE };

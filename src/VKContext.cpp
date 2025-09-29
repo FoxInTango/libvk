@@ -11,13 +11,8 @@ std::vector<const char*> supportedInstanceExtensions;
 std::vector<const char*> instanceExtensions = { VK_KHR_SURFACE_EXTENSION_NAME };
 
 // Physical device (GPU) that Vulkan will use
-//VkPhysicalDevice physicalDevice{ VK_NULL_HANDLE };
-// Stores physical device properties (for e.g. checking device limits)
-VkPhysicalDeviceProperties deviceProperties{};
-// Stores the features available on the selected physical device (for e.g. checking if a feature is available)
-VkPhysicalDeviceFeatures deviceFeatures{};
-// Stores all available memory (type) properties for the physical device
-VkPhysicalDeviceMemoryProperties deviceMemoryProperties{};
+// VkPhysicalDevice physicalDevice{ VK_NULL_HANDLE };
+
 /** @brief Set of physical device features to be enabled for this example (must be set in the derived constructor) */
 VkPhysicalDeviceFeatures enabledFeatures{};
 /** @brief Set of device extensions to be enabled for this example (must be set in the derived constructor) */
@@ -70,7 +65,18 @@ bool requiresStencil{ false };
  *  1,Debug
  *  2,Mac
  * */
-std::map<std::string,VkPhysicalDevice>  physicalDeviceMap;
+/** Physical GPU Devices
+ *  Physical GPU Device Properties
+ *  Physical Displays
+ *  Physical Display Properties
+ *  Physical Display Modes
+ * */
+std::vector<std::string>                               physicalDeviceArray;
+std::map<std::string,VkPhysicalDevice>                 physicalDeviceMap;
+std::map<std::string,VkPhysicalDeviceProperties>       physicalDevicePropertiesMap;
+std::map<std::string,VkPhysicalDeviceFeatures>         physicalDeviceFeaturesMap;
+std::map<std::string,VkPhysicalDeviceMemoryProperties> physicalDeviceMemoryPropertiesMap;
+
 VKContext::VKContext(){
     #ifdef PLATFORM_LINUX
     instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
@@ -242,7 +248,13 @@ void VKContext::enumeratePhysicalDevices(){
         printf("Could not enumerate physical devices.\n");
         return;
     }
-    
+
+    /* Record Physical Devices
+        std::map<std::string,VkPhysicalDevice>                 physicalDeviceMap;
+        std::map<std::string,VkPhysicalDeviceProperties>       physicalDevicePropertiesMap;
+        std::map<std::string,VkPhysicalDeviceFeatures>         physicalDeviceFeaturesMap;
+        std::map<std::string,VkPhysicalDeviceMemoryProperties> physicalDeviceMemoryPropertiesMap;
+*/
     for(std::vector<VkPhysicalDevice>::iterator iter = physicalDevices.begin();iter != physicalDevices.end();iter ++){
         struct VkPhysicalDeviceProperties deviceProperties;/** /usr/include/vulkan/vulkan_core.h */
         VkPhysicalDeviceFeatures deviceFeatures;
@@ -251,7 +263,12 @@ void VKContext::enumeratePhysicalDevices(){
         vkGetPhysicalDeviceProperties(*iter, &deviceProperties);
         vkGetPhysicalDeviceFeatures(*iter, &deviceFeatures);
         vkGetPhysicalDeviceMemoryProperties(*iter, &memoryProperties);
+
+	physicalDeviceArray.push_back(deviceProperties.deviceName);
         physicalDeviceMap.insert(std::pair<std::string,VkPhysicalDevice>(deviceProperties.deviceName,*iter));
+	physicalDevicePropertiesMap.insert(std::pair<std::string,VkPhysicalDeviceProperties>(deviceProperties.deviceName,deviceProperties));
+        physicalDeviceFeaturesMap.insert(std::pair<std::string,VkPhysicalDeviceFeatures>(deviceProperties.deviceName,deviceFeatures));
+        physicalDeviceMemoryPropertiesMap.insert(std::pair<std::string,VkPhysicalDeviceMemoryProperties>(deviceProperties.deviceName,memoryProperties));
         /*
 	printf("%s :\nAPI    Version:%u\nDriver Version:%u\nVendorID:%u\nDeviceID:%u\n",\
 			deviceProperties.deviceName,             \
@@ -267,6 +284,42 @@ void VKContext::enumeratePhysicalDevices(){
     }
 }
 
+uint32_t VKContext::physicalDeviceCount(){
+    return physicalDeviceArray.size();
+}
+
+VkPhysicalDevice VKContext::physicalDeviceAt(uint32_t index){
+    return index < physicalDeviceArray.size() && physicalDeviceMap.count(physicalDeviceArray[index]) ? physicalDeviceMap.at(physicalDeviceArray[index]) : VK_NULL_HANDLE;
+}
+
+VkPhysicalDevice VKContext::physicalDeviceAt(const char* name){
+    return physicalDeviceMap.count(name) ? physicalDeviceMap.at(name) : VK_NULL_HANDLE;
+}
+
+VkPhysicalDeviceProperties* VKContext::physicalDevicePropertiesOf(uint32_t index){
+    return index < physicalDeviceArray.size() && physicalDevicePropertiesMap.count(physicalDeviceArray[index]) ? &physicalDevicePropertiesMap.at(physicalDeviceArray[index]) : nullptr;
+}
+
+VkPhysicalDeviceProperties* VKContext::physicalDevicePropertiesOf(const char* name){
+    return physicalDevicePropertiesMap.count(name) ? &physicalDevicePropertiesMap.at(name) : nullptr;
+}
+
+VkPhysicalDeviceFeatures* VKContext::physicalDeviceFeaturesOf(uint32_t index){
+    return index < physicalDeviceArray.size() && physicalDeviceFeaturesMap.count(physicalDeviceArray[index]) ? &physicalDeviceFeaturesMap.at(physicalDeviceArray[index]) : nullptr;
+}
+
+VkPhysicalDeviceFeatures* VKContext::physicalDeviceFeaturesOf(const char* name){
+    return physicalDeviceFeaturesMap.count(name) ? &physicalDeviceFeaturesMap.at(name) : nullptr;
+}
+
+VkPhysicalDeviceMemoryProperties* VKContext::physicalDeviceMemoryPropertiesOf(uint32_t index){
+    return index < physicalDeviceArray.size() && physicalDeviceMemoryPropertiesMap.count(physicalDeviceArray[index]) ? &physicalDeviceMemoryPropertiesMap.at(physicalDeviceArray[index]) : nullptr;
+}
+
+VkPhysicalDeviceMemoryProperties* VKContext::physicalDeviceMemoryPropertiesOf(const char* name){
+    return physicalDeviceMemoryPropertiesMap.count(name) ? &physicalDeviceMemoryPropertiesMap.at(name) : nullptr;
+}
+/*
 void VKContext::enumerateDisplay(){
 
     uint32_t displayPropertyCount;
@@ -307,20 +360,20 @@ void VKContext::enumerateDisplay(){
             const VkDisplayModePropertiesKHR* mode = &pModeProperties[j];
             // to be delete : sparrow
             printf("mode %d width: %d height: %d\n",j,mode->parameters.visibleRegion.width,mode->parameters.visibleRegion.height);
-            /*
+            
 	    if(mode->parameters.visibleRegion.width == width && mode->parameters.visibleRegion.height == height){
                 displayMode = mode->displayMode;
                 foundMode = true;
                 break;
             }
-            */
+            
         }
         if(foundMode){ break;}
         delete [] pModeProperties;
     }
     } 
 }
-
+*/
 VKDevice* VKContext::createDevice(VkPhysicalDevice           physicalDevice,
                                   VkPhysicalDeviceFeatures   enabledFeatures,
                                   std::vector<const char *>  enabledDeviceExtensions,
@@ -377,10 +430,6 @@ void VKContext::destroyDevices(){
 
 VKDevice* VKContext::deviceAt(const char* name){
     return deviceMap.count(name) ? deviceMap.at(name) : nullptr;
-}
-
-VkPhysicalDevice VKContext::physicalDeviceAt(const char* name){
-    return physicalDeviceMap.count(name) ? physicalDeviceMap.at(name) : VK_NULL_HANDLE;
 }
 
 void VKContext::enableInstanceExtensions(){}

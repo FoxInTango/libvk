@@ -4,6 +4,7 @@
 #define VK_USE_PLATFORM_WAYLAND_KHR
 //#define VK_USE_PLATFORM_DIRECTFB_EXT
 #endif
+#include "VKDisplay.h"
 #include "VKDevice.h"
 #include "VKBuffer.h"
 #include <libcpp/libcpp.h>
@@ -12,6 +13,8 @@
 #include <map>
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
+/** VKDisplaySurfaces should be created by VKContext Only.
+ * */
 class foxintangoAPI VKContext{
 friend class VKDevice;
 friend class VKSurface;
@@ -27,8 +30,31 @@ public:
 public:
     void clean();
 public:
+    /** Physical GPU Device Methods
+     * */
     void enumeratePhysicalDevices();
-    void enumerateDisplay();
+    uint32_t                          physicalDeviceCount();
+    VkPhysicalDevice                  physicalDeviceAt(uint32_t index);
+    VkPhysicalDevice                  physicalDeviceAt(const char* name);
+    VkPhysicalDeviceProperties*       physicalDevicePropertiesOf(uint32_t index);
+    VkPhysicalDeviceProperties*       physicalDevicePropertiesOf(const char* name);
+    VkPhysicalDeviceFeatures*         physicalDeviceFeaturesOf(uint32_t index);
+    VkPhysicalDeviceFeatures*         physicalDeviceFeaturesOf(const char* name);
+    VkPhysicalDeviceMemoryProperties* physicalDeviceMemoryPropertiesOf(uint32_t index);
+    VkPhysicalDeviceMemoryProperties* physicalDeviceMemoryPropertiesOf(const char* name);
+    /** Physical Device Display methods
+     * */
+    uint32_t                     physicalDisplayPropertyCount();
+    VkDisplayPropertiesKHR*      physicalDisplayPropertiesAt(uint32_t index);
+    VkDisplayPlanePropertiesKHR* physicalDisplayPlanPropertiesAt(uint32_t index);
+    /** Display Device Methods
+     *  Implemented in platform/VK{Platform}.cpp
+     * */
+    void enumerateDisplays();
+    uint32_t   displayCount();
+    VKDisplay* displayAt(uint32_t index);
+    VKDisplay* displayAt(const char* name);
+
     VKDevice* createDevice(VkPhysicalDevice           physicalDevice,
                            VkPhysicalDeviceFeatures   enabledFeatures,
                            std::vector<const char *>  enabledExtensions,
@@ -48,7 +74,6 @@ public:
     void destroyDevices();
 public:
     VKDevice*        deviceAt(const char* name);
-    VkPhysicalDevice physicalDeviceAt(const char* name);
 public:
     VKTexture*         createTextureFromFile(VKDevice*   targetDevice,char* path);
     VKTexture*         createTextureFromMemory(VKDevice* targetDevice,char*    data, uint32_t width, uint32_t height,             VkFormat format);
