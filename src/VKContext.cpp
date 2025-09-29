@@ -319,6 +319,7 @@ VkPhysicalDeviceMemoryProperties* VKContext::physicalDeviceMemoryPropertiesOf(ui
 VkPhysicalDeviceMemoryProperties* VKContext::physicalDeviceMemoryPropertiesOf(const char* name){
     return physicalDeviceMemoryPropertiesMap.count(name) ? &physicalDeviceMemoryPropertiesMap.at(name) : nullptr;
 }
+
 /*
 void VKContext::enumerateDisplay(){
 

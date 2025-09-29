@@ -19,7 +19,9 @@ protected:
     VKDisplayType type;
 union {
     struct {
-        VkDisplayPropertiesKHR* properties;
+        VkDisplayPropertiesKHR*      displayProperties;
+        VkDisplayPlanePropertiesKHR* planeProperties;
+        VkDisplayModePropertiesKHR*  modeProperties;
     }physical;
     struct {
         std::string name;

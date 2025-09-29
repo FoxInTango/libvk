@@ -30,14 +30,17 @@ void VKContext::enumerateDisplays(){
         return enumerateXServerDisplays();
     }
 
-    uint32_t displayPropertyCount;
-
     for(uint32_t i = 0;i < this->physicalDeviceCount();i ++) {
         
 	// Get display property
         VkPhysicalDevice physicalDevice = this->physicalDeviceAt(i);
-	if(VK_NULL_HANDLE == physicalDevice) continue;
-        /*
+	if(VK_NULL_HANDLE == physicalDevice) {
+            std::cout << "physicalDevice == VK_NULL_HANDLE :: " << __func__ << std::endl;
+            continue;
+        }
+
+        uint32_t displayPropertyCount;
+
 	vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, NULL);
         printf("displayPropertyCount: %u\n",displayPropertyCount);
         	
@@ -49,15 +52,15 @@ void VKContext::enumerateDisplays(){
         printf("planePropertyCount: %u\n",planePropertyCount);
         VkDisplayPlanePropertiesKHR* pPlaneProperties = new VkDisplayPlanePropertiesKHR[planePropertyCount];
         vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, pPlaneProperties);
-        */
+        
         VkDisplayKHR display = VK_NULL_HANDLE;
         VkDisplayModeKHR displayMode;
         VkDisplayModePropertiesKHR* pModeProperties;
         bool foundMode = false;
          
-        for(uint32_t i = 0; i < displayPropertyCount;++i){
-            std::cout << "Display " << this->physicalDisplayPropertiesAt(i)->displayName << ":" << std::endl;
-            display = this->physicalDisplayPropertiesAt(i)->display;
+        for(uint32_t j = 0; j < displayPropertyCount;++ j){
+            std::cout << "Display " << pDisplayProperties[j].displayName << ":" << std::endl;
+            display = pDisplayProperties[j].display;
             uint32_t modeCount;
             vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, NULL);
             pModeProperties = new VkDisplayModePropertiesKHR[modeCount];
@@ -66,8 +69,8 @@ void VKContext::enumerateDisplays(){
                  printf("no mode found for display %d with modeCount: %u\n",i,modeCount);
             } else printf("modeCount : %u \n",modeCount);
 
-            for(uint32_t j = 0; j < modeCount; ++j){
-                const VkDisplayModePropertiesKHR* mode = &pModeProperties[j];
+            for(uint32_t k = 0; k < modeCount; ++ k){
+                const VkDisplayModePropertiesKHR* mode = &pModeProperties[k];
                 // to be delete : sparrow
                 printf("mode %d width: %d height: %d\n",j,mode->parameters.visibleRegion.width,mode->parameters.visibleRegion.height);
                 /*
@@ -83,7 +86,11 @@ void VKContext::enumerateDisplays(){
         }
     }
 }
-
+/*
+uint32_t                     VKContext::physicalDisplayPropertyCount(){}
+VkDisplayPropertiesKHR*      VKContext::physicalDisplayPropertiesAt(uint32_t index){}
+VkDisplayPlanePropertiesKHR* VKContext::physicalDisplayPlanPropertiesAt(uint32_t index){}
+*/
 uint32_t   VKContext::displayCount(){
     return displayMap.size();
 }
