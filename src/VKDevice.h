@@ -10,7 +10,7 @@
 #ifndef _LIBVK_DEVICE_H_
 #define _LIBVK_DEVICE_H_
 #include "VKHeadlessSurface.h"
-#include "VKWindowSurface.h"
+#include "VKDisplaySurface.h"
 #include "VKTexture.h"
 #include "VKSurface.h"
 #include "VKBuffer.h"
@@ -37,7 +37,7 @@ class foxintangoAPI VKDevice {
 friend class VKContext;
 friend class VKSurface;
 friend class VKTexture;
-friend class VKWindowSurface;
+friend class VKDisplaySurface;
 friend class VKHeadlessSurface;
 protected:
     VKContext*  context;
@@ -101,7 +101,7 @@ public:
 public:
     VKTexture*         createTextureFromFile(char* path);
     VKTexture*         createTextureFromMemory(char* data,uint32_t width,uint32_t height,VkFormat format);
-    VKWindowSurface*   createWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
+    VKDisplaySurface*  createWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
     VKHeadlessSurface* createHeadlessSurface(uint32_t width,uint32_t height);
 };
 namespaceEnd

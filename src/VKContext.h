@@ -19,7 +19,7 @@ class foxintangoAPI VKContext{
 friend class VKDevice;
 friend class VKSurface;
 friend class VKTexture;
-friend class VKWindowSurface;
+friend class VKDisplaySurface;
 friend class VKHeadlessSurface;
 protected:
     std::map<std::string,VKDevice*>         deviceMap;
@@ -42,13 +42,14 @@ public:
     VkPhysicalDeviceFeatures*         physicalDeviceFeaturesOf(const char* name);
     VkPhysicalDeviceMemoryProperties* physicalDeviceMemoryPropertiesOf(uint32_t index);
     VkPhysicalDeviceMemoryProperties* physicalDeviceMemoryPropertiesOf(const char* name);
-    /** Physical Device Display methods
+    /** Physical Display methods
+     *      Implemented in platform/VK{Platform}.cpp
      * */
     uint32_t                     physicalDisplayPropertyCount();
     VkDisplayPropertiesKHR*      physicalDisplayPropertiesAt(uint32_t index);
     VkDisplayPlanePropertiesKHR* physicalDisplayPlanPropertiesAt(uint32_t index);
-    /** Display Device Methods
-     *  Implemented in platform/VK{Platform}.cpp
+    /** Display Methods
+     *      Implemented in platform/VK{Platform}.cpp
      * */
     void enumerateDisplays();
     uint32_t   displayCount();
@@ -75,10 +76,14 @@ public:
 public:
     VKDevice*        deviceAt(const char* name);
 public:
-    VKTexture*         createTextureFromFile(VKDevice*   targetDevice,char* path);
-    VKTexture*         createTextureFromMemory(VKDevice* targetDevice,char*    data, uint32_t width, uint32_t height,             VkFormat format);
-    VKWindowSurface*   createWindowSurface(VKDevice*     targetDevice,uint32_t width,uint32_t height,bool     hasTitleBar = false,char* title = "Vulkan Window");
-    VKHeadlessSurface* createHeadlessSurface(VKDevice*   targetDevice,uint32_t width,uint32_t height);
+    VKTexture*         loadTextureFromFile(VKDevice*   targetDevice,char* path);
+    VKTexture*         loadTextureFromMemory(VKDevice* targetDevice,char* data,uint32_t width,uint32_t height,VkFormat format);
+    //VKTextureSurface*  createTextureSurface();
+    //VKDisplaySurface*  createDisplaySurface(VKDevice*  targetDevice,uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
+    VKDisplaySurface*  createDisplaySurface(VKDisplay* display,uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
+    VKDisplaySurface*  createDisplaySurface(char*  displayName,uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
+    VKHeadlessSurface* createHeadlessSurface(uint32_t width,uint32_t height,char* deviceName);
+    VKHeadlessSurface* createHeadlessSurface(uint32_t width,uint32_t height,VKDevice* device);
 public:
     virtual void enableInstanceExtensions();
     virtual void enableDeviceFeatures();

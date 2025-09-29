@@ -6,7 +6,7 @@
 #ifdef PLATFORM_LINUX
 #include "../VKDisplay.h"
 #include "../VKContext.h"
-#include "../VKWindowSurface.h"
+#include "../VKDisplaySurface.h"
 using namespace foxintango;
 #include <wayland-client.h>
 //#include "xdg-shell-client-protocol.h"
@@ -101,8 +101,8 @@ VKDisplay* VKContext::displayAt(const char* name){
     return displayMap.count(name) ? displayMap.at(name) : nullptr;
 }
 
-VKWindowSurface::VKWindowSurface(){}
-VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar,char* title){
+VKDisplaySurface::VKDisplaySurface(){}
+VKDisplaySurface::VKDisplaySurface(uint32_t width,uint32_t height,bool hasTitleBar,char* title){
     assert(this->device);
     VkResult res;
     if(has_wayland()){ 
@@ -212,7 +212,7 @@ VKWindowSurface::VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar
     colorSpace  = selectedFormat.colorSpace;
 
 }
-VKWindowSurface::~VKWindowSurface(){}
+VKDisplaySurface::~VKDisplaySurface(){}
 /**
 * Create direct to display surface
 */	

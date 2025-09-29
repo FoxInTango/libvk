@@ -6,18 +6,18 @@ EXTERN_C_BEGIN
 namespaceBegin(foxintango)
 /** VKDisplaySurfaces should be created by VKContext Only.
  * */
-class VKWindowSurface :public VKSurface{
+class VKDisplaySurface :public VKSurface{
 protected:
 VkSurfaceKHR   surfaceKHR   { VK_NULL_HANDLE };
 VkSwapchainKHR swapchainKHR { VK_NULL_HANDLE };
 protected:
-    VKWindowSurface();
+    VKDisplaySurface();
     /**
      * If width or height is zero,the window will be fullscreen.
      * */
-    VKWindowSurface(uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
+    VKDisplaySurface(uint32_t width,uint32_t height,bool hasTitleBar = false,char* title = "Vulkan Window");
     
-    virtual ~VKWindowSurface();
+    virtual ~VKDisplaySurface();
 private:
     void setupSwapchain(uint32_t& width, uint32_t& height,bool vsync, bool fullscreen);
     void clean();

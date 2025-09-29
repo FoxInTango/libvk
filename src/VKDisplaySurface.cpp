@@ -1,10 +1,10 @@
-#include "VKWindowSurface.h"
+#include "VKDisplaySurface.h"
 using namespace foxintango;
 #include "VKContext.h"
 #include "VKDevice.h"
 #include <assert.h>
 
-void VKWindowSurface::setupSwapchain(uint32_t& width, uint32_t& height, bool vsync, bool fullscreen)
+void VKDisplaySurface::setupSwapchain(uint32_t& width, uint32_t& height, bool vsync, bool fullscreen)
 {
     assert(device);
     // Store the current swap chain handle so we can use it later on to ease up recreation
@@ -167,14 +167,14 @@ void VKWindowSurface::setupSwapchain(uint32_t& width, uint32_t& height, bool vsy
     }
 }
 
-VkResult VKWindowSurface::acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex)
+VkResult VKDisplaySurface::acquireNextImage(VkSemaphore presentCompleteSemaphore, uint32_t& imageIndex)
 {
     // By setting timeout to UINT64_MAX we will always wait until the next image has been acquired or an actual error is thrown
     // With that we don't have to handle VK_NOT_READY
     return vkAcquireNextImageKHR(this->device->logicalDevice,this->swapchainKHR, UINT64_MAX, presentCompleteSemaphore, (VkFence)nullptr, &imageIndex);
 }
 
-VkResult VKWindowSurface::queuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore)
+VkResult VKDisplaySurface::queuePresent(VkQueue queue, uint32_t imageIndex, VkSemaphore waitSemaphore)
 {
     VkPresentInfoKHR presentInfo = {};
     presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
@@ -191,7 +191,7 @@ VkResult VKWindowSurface::queuePresent(VkQueue queue, uint32_t imageIndex, VkSem
 }
 
 
-void VKWindowSurface::clean()
+void VKDisplaySurface::clean()
 {
     if(swapchainKHR != VK_NULL_HANDLE) {
         for(auto i = 0; i < images.size(); i++) {
