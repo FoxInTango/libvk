@@ -6,6 +6,9 @@
 EXTERN_C_BEGIN
 namespaceBegin(foxintango)
 
+/** EDID 
+ *     kms-cube kms-vulkan ksmroots
+ * */
 enum VKDisplayType{
     Physical,
     Wayland,
@@ -13,14 +16,16 @@ enum VKDisplayType{
 };
 
 class foxintangoAPI VKDisplay{
+friend class VKContext;
+friend class VKDisplaySurface;
 protected:
     std::string deviceName;
     std::string displayName;
     VKDisplayType type;
 union {
     struct {
-        VkDisplayPropertiesKHR*      displayProperties;
-        VkDisplayPlanePropertiesKHR* planeProperties;
+        VkDisplayPropertiesKHR       displayProperties;
+	uint32_t                     modePropertyCount;
         VkDisplayModePropertiesKHR*  modeProperties;
     }physical;
     struct {
@@ -32,6 +37,7 @@ union {
 };
 public:
     VKDisplay();
+    VKDisplay(enum VKDisplayType type);
     ~VKDisplay();
 
 };

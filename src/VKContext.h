@@ -36,6 +36,7 @@ public:
     uint32_t                          physicalDeviceCount();
     VkPhysicalDevice                  physicalDeviceAt(uint32_t index);
     VkPhysicalDevice                  physicalDeviceAt(const char* name);
+    const char*                       physicalDeviceNameAt(uint32_t index);
     VkPhysicalDeviceProperties*       physicalDevicePropertiesOf(uint32_t index);
     VkPhysicalDeviceProperties*       physicalDevicePropertiesOf(const char* name);
     VkPhysicalDeviceFeatures*         physicalDeviceFeaturesOf(uint32_t index);

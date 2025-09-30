@@ -12,9 +12,13 @@ using namespace foxintango;
 //#include "xdg-shell-client-protocol.h"
 #include <assert.h>
 #include <map>
-
+#include <vector>
 std::map<std::string,VKDisplay*> displayMap;
 std::vector<std::string>         displayArray;
+
+std::map<std::string,std::vector<VkDisplayPropertiesKHR>>      physicalDisplayPropertyMap;
+std::map<std::string,std::vector<VkDisplayPlanePropertiesKHR>> physicalDisplayPlanePropertiesMap;
+//VkDisplayPropertiesKHR* pDisplayProperties = new VkDisplayPropertiesKHR[displayPropertyCount];
 
 bool has_wayland(){ return false; }
 bool has_xserver(){ return false; }
@@ -33,6 +37,7 @@ void VKContext::enumerateDisplays(){
     for(uint32_t i = 0;i < this->physicalDeviceCount();i ++) {
         
 	// Get display property
+        std::cout << "Physical Device " <<  i << " : " << this->physicalDeviceNameAt(i) << std::endl;
         VkPhysicalDevice physicalDevice = this->physicalDeviceAt(i);
 	if(VK_NULL_HANDLE == physicalDevice) {
             std::cout << "physicalDevice == VK_NULL_HANDLE :: " << __func__ << std::endl;
@@ -42,29 +47,30 @@ void VKContext::enumerateDisplays(){
         uint32_t displayPropertyCount;
 
 	vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, NULL);
-        printf("displayPropertyCount: %u\n",displayPropertyCount);
-        	
         VkDisplayPropertiesKHR* pDisplayProperties = new VkDisplayPropertiesKHR[displayPropertyCount];
         vkGetPhysicalDeviceDisplayPropertiesKHR(physicalDevice, &displayPropertyCount, pDisplayProperties);
         // Get plane property
         uint32_t planePropertyCount;
         vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, NULL);
-        printf("planePropertyCount: %u\n",planePropertyCount);
         VkDisplayPlanePropertiesKHR* pPlaneProperties = new VkDisplayPlanePropertiesKHR[planePropertyCount];
         vkGetPhysicalDeviceDisplayPlanePropertiesKHR(physicalDevice, &planePropertyCount, pPlaneProperties);
         
-        VkDisplayKHR display = VK_NULL_HANDLE;
+        VkDisplayKHR displayKHR = VK_NULL_HANDLE;
         VkDisplayModeKHR displayMode;
         VkDisplayModePropertiesKHR* pModeProperties;
         bool foundMode = false;
          
         for(uint32_t j = 0; j < displayPropertyCount;++ j){
-            std::cout << "Display " << pDisplayProperties[j].displayName << ":" << std::endl;
-            display = pDisplayProperties[j].display;
+            VKDisplay* display = new VKDisplay(VKDisplayType::Physical);
+	    assert(display);
+            std::cout << "Display " << j << " with name: " <<pDisplayProperties[j].displayName << " : " << std::endl;
+            display->deviceName = pDisplayProperties[j].displayName;
+	    displayKHR = pDisplayProperties[j].display;
+	    
             uint32_t modeCount;
-            vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, NULL);
+            vkGetDisplayModePropertiesKHR(physicalDevice, displayKHR, &modeCount, NULL);
             pModeProperties = new VkDisplayModePropertiesKHR[modeCount];
-            vkGetDisplayModePropertiesKHR(physicalDevice, display, &modeCount, pModeProperties);
+            vkGetDisplayModePropertiesKHR(physicalDevice, displayKHR, &modeCount, pModeProperties);
             if( 1 > modeCount) {
                  printf("no mode found for display %d with modeCount: %u\n",i,modeCount);
             } else printf("modeCount : %u \n",modeCount);
@@ -72,7 +78,7 @@ void VKContext::enumerateDisplays(){
             for(uint32_t k = 0; k < modeCount; ++ k){
                 const VkDisplayModePropertiesKHR* mode = &pModeProperties[k];
                 // to be delete : sparrow
-                printf("mode %d width: %d height: %d\n",j,mode->parameters.visibleRegion.width,mode->parameters.visibleRegion.height);
+                printf("mode %d width: %d height: %d\n",k,mode->parameters.visibleRegion.width,mode->parameters.visibleRegion.height);
                 /*
 	        if(mode->parameters.visibleRegion.width == width && mode->parameters.visibleRegion.height == height){
                     displayMode = mode->displayMode;

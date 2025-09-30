@@ -77,6 +77,7 @@ std::map<std::string,VkPhysicalDeviceProperties>       physicalDevicePropertiesM
 std::map<std::string,VkPhysicalDeviceFeatures>         physicalDeviceFeaturesMap;
 std::map<std::string,VkPhysicalDeviceMemoryProperties> physicalDeviceMemoryPropertiesMap;
 
+
 VKContext::VKContext(){
     #ifdef PLATFORM_LINUX
     instanceExtensions.push_back(VK_KHR_DISPLAY_EXTENSION_NAME);
@@ -264,6 +265,16 @@ void VKContext::enumeratePhysicalDevices(){
         vkGetPhysicalDeviceFeatures(*iter, &deviceFeatures);
         vkGetPhysicalDeviceMemoryProperties(*iter, &memoryProperties);
 
+	/** Record PhysicalDevices with Display Name
+	 *     VkPhysicalDeviceProperties
+	 *         vendorID
+	 *         deviceID 
+	 *         pci-id
+	 *     vkGetPhysicalDeviceProperties2 https://registry.khronos.org/vulkan/specs 
+	 *         VkPhysicalDeviceIDProperties
+	 *         VkPhysicalDevicePCIBusInfoPropertiesEXT
+	 *         VkPhysicalDeviceVulkan1*Properties
+	 * */
 	physicalDeviceArray.push_back(deviceProperties.deviceName);
         physicalDeviceMap.insert(std::pair<std::string,VkPhysicalDevice>(deviceProperties.deviceName,*iter));
 	physicalDevicePropertiesMap.insert(std::pair<std::string,VkPhysicalDeviceProperties>(deviceProperties.deviceName,deviceProperties));
@@ -294,6 +305,10 @@ VkPhysicalDevice VKContext::physicalDeviceAt(uint32_t index){
 
 VkPhysicalDevice VKContext::physicalDeviceAt(const char* name){
     return physicalDeviceMap.count(name) ? physicalDeviceMap.at(name) : VK_NULL_HANDLE;
+}
+
+const char* VKContext::physicalDeviceNameAt(uint32_t index){
+    return physicalDeviceArray.size() > index ? physicalDeviceArray[index].c_str() : nullptr;
 }
 
 VkPhysicalDeviceProperties* VKContext::physicalDevicePropertiesOf(uint32_t index){
