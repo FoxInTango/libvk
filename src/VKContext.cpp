@@ -3,6 +3,7 @@ using namespace foxintango;
 #include "VKDevice.h"
 #include <iostream>
 #include <string>
+#include <sstream>
 #include <vector>
 #include <string.h>
 #include <unistd.h>
@@ -288,10 +289,35 @@ void VKContext::enumeratePhysicalDevices(){
 			deviceProperties.vendorID,               \
 			deviceProperties.deviceID);
         */
+        /* https://github.com/SaschaWillems/VulkanCapsViewer vulkanDeviceInfo.cpp
+	 * 
+	 * NVIDIA
+	 */
+	std::string driverVersion;
+        if(deviceProperties.vendorID == 4318)
+        {
+        // 10 bits = major version (up to r1023)
+        // 8  bits = minor version (up to 255)
+        // 8  bits = secondary branch version/build version (up to 255)
+        // 6  bits = tertiary branch/build version (up to 63)
+
+            uint32_t major = (deviceProperties.driverVersion >> 22) & 0x3ff;
+            uint32_t minor = (deviceProperties.driverVersion >> 14) & 0x0ff;
+            uint32_t secondaryBranch = (deviceProperties.driverVersion >> 6) & 0x0ff;
+            uint32_t tertiaryBranch  = (deviceProperties.driverVersion     ) & 0x003f;
+
+            driverVersion = std::to_string(major) + "." + std::to_string(minor) + "." + std::to_string(secondaryBranch) + "." + std::to_string(tertiaryBranch);
+        } else {
+           // todo : Add mappings for other vendors
+           std::stringstream driverStream;
+           driverStream << VK_VERSION_MAJOR(deviceProperties.driverVersion) << "." << VK_VERSION_MINOR(deviceProperties.driverVersion) << "." << VK_VERSION_PATCH(deviceProperties.driverVersion);
+           driverVersion =  driverStream.str();
+        }
         std::cout << "Device [" << iter - physicalDevices.begin() << "] : " << deviceProperties.deviceName << std::endl;
-        std::cout << " Type   : " << vks::tools::physicalDeviceTypeString(deviceProperties.deviceType) << "\n";
-        std::cout << " API    : " << (deviceProperties.apiVersion    >> 22) << "." << ((deviceProperties.apiVersion    >> 12) & 0x3ff) << "." << (deviceProperties.apiVersion    & 0xfff)    << "\n";
-        std::cout << " Driver : " << (deviceProperties.driverVersion >> 22) << "." << ((deviceProperties.driverVersion >> 12) & 0x3ff) << "." << (deviceProperties.driverVersion & 0xfff) << "\n";
+        std::cout << "  Type      : " << vks::tools::physicalDeviceTypeString(deviceProperties.deviceType) << "\n";
+	std::cout << "  Vendor ID : " << deviceProperties.vendorID << std::endl;
+        std::cout << "  API       : " << (deviceProperties.apiVersion    >> 22) << "." << ((deviceProperties.apiVersion    >> 12) & 0x3ff) << "." << (deviceProperties.apiVersion    & 0xfff)    << "\n";
+        std::cout << "  Driver    : " << driverVersion << std::endl;
     }
 }
 

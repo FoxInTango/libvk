@@ -37,7 +37,7 @@ void VKContext::enumerateDisplays(){
     for(uint32_t i = 0;i < this->physicalDeviceCount();i ++) {
         
 	// Get display property
-        std::cout << "Physical Device " <<  i << " : " << this->physicalDeviceNameAt(i) << std::endl;
+        std::cout << "Physical Device [" <<  i << "]: " << this->physicalDeviceNameAt(i) << std::endl;
         VkPhysicalDevice physicalDevice = this->physicalDeviceAt(i);
 	if(VK_NULL_HANDLE == physicalDevice) {
             std::cout << "physicalDevice == VK_NULL_HANDLE :: " << __func__ << std::endl;
@@ -63,7 +63,7 @@ void VKContext::enumerateDisplays(){
         for(uint32_t j = 0; j < displayPropertyCount;++ j){
             VKDisplay* display = new VKDisplay(VKDisplayType::Physical);
 	    assert(display);
-            std::cout << "Display " << j << " with name: " <<pDisplayProperties[j].displayName << " : " << std::endl;
+            std::cout << "Physical Display [" << j << "]:[" <<pDisplayProperties[j].displayName << "]" << std::endl;
             display->deviceName = pDisplayProperties[j].displayName;
 	    displayKHR = pDisplayProperties[j].display;
 	    
@@ -89,6 +89,7 @@ void VKContext::enumerateDisplays(){
             }
             if(foundMode){ break;}
             delete [] pModeProperties;
+	    std::cout<<"::::                        ::::"<<std::endl;
         }
     }
 }
